@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import API from '../api'
-import { Link } from 'react-router-dom'
 
 export default function Dashboard() {
   const [email, setEmail] = useState('')
@@ -17,72 +16,137 @@ export default function Dashboard() {
   }, [])
 
   async function onSignup() {
-    try {
-      await API.post('/auth/signup', { username, email, password })
-      alert('Signed up successfully! Please log in.')
-      setMode('login')
-      setUsername('')
-      setEmail('')
-      setPassword('')
-    } catch (error) {
-      alert('Signup failed. Please try again.')
-    }
+    const r = await API.post('/auth/signup', { username, email, password })
+    alert('Signed up! Now log in.')
+    setMode('login')
   }
 
   async function onLogin() {
-    try {
-      const r = await API.post('/auth/login', { email, password })
-      localStorage.setItem('token', r.data.access_token)
-      const me = await API.get('/auth/me')
-      setInfo(me.data)
-    } catch (error) {
-       alert('Login failed. Check your credentials.')
-    }
+    const r = await API.post('/auth/login', { email, password })
+    localStorage.setItem('token', r.data.access_token)
+    const me = await API.get('/auth/me')
+    setInfo(me.data)
   }
 
-  const inputStyles = "w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 mb-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
-  const buttonStyles = "w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors"
-  const switchModeButtonStyles = "bg-transparent text-cyan-400 hover:underline"
-
   return (
-    <div>
-      <h2 className="text-3xl font-bold mb-6 text-white">Dashboard</h2>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+        <p className="text-gray-400">Track your coding progress and start practicing</p>
+      </div>
+
       {info ? (
-        <div className="space-y-8">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-2xl font-semibold mb-4 text-white">Welcome, {info.username}!</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
-                  <p>Questions Solved: <span className="font-bold text-cyan-400">{info.solved_count}</span></p>
-              </div>
+        <div className="bg-dark-secondary rounded-lg p-6 mb-8 border border-gray-700">
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="w-12 h-12 bg-code-green rounded-full flex items-center justify-center">
+              <span className="text-lg font-bold text-white">{info.username.charAt(0).toUpperCase()}</span>
             </div>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <StartPractice />
+            <div>
+              <h2 className="text-xl font-semibold text-white">Welcome back, {info.username}!</h2>
+              <p className="text-gray-400">Keep up the great work</p>
             </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-dark-tertiary p-4 rounded-lg border border-gray-600">
+              <div className="text-2xl font-bold text-code-green">{info.solved_count}</div>
+              <div className="text-sm text-gray-400">Problems Solved</div>
+            </div>
+            <div className="bg-dark-tertiary p-4 rounded-lg border border-gray-600">
+              <div className="text-2xl font-bold text-code-orange">0</div>
+              <div className="text-sm text-gray-400">Current Streak</div>
+            </div>
+            <div className="bg-dark-tertiary p-4 rounded-lg border border-gray-600">
+              <div className="text-2xl font-bold text-blue-400">0</div>
+              <div className="text-sm text-gray-400">Points Earned</div>
+            </div>
+          </div>
         </div>
       ) : (
-        <div className="flex justify-center items-center">
-          <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div className="bg-dark-secondary rounded-lg p-8 mb-8 border border-gray-700">
+          <div className="max-w-md mx-auto">
             {mode === 'login' ? (
               <div>
-                <h3 className="text-2xl font-semibold text-center mb-6 text-white">Login</h3>
-                <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className={inputStyles} />
-                <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className={inputStyles} />
-                <button onClick={onLogin} className={buttonStyles}>Login</button>
-                <p className="text-center mt-4">Don't have an account? <button onClick={() => setMode('signup')} className={switchModeButtonStyles}>Create one</button></p>
+                <h2 className="text-2xl font-bold text-white mb-6 text-center">Sign In</h2>
+                <div className="space-y-4">
+                  <input
+                    placeholder="Email address"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+                  />
+                  <input
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+                  />
+                  <button
+                    onClick={onLogin}
+                    className="w-full bg-code-green hover:bg-green-600 text-white py-3 rounded-md font-medium transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <p className="text-center text-gray-400">
+                    Don't have an account?{' '}
+                    <button
+                      onClick={() => setMode('signup')}
+                      className="text-code-green hover:text-green-400 font-medium"
+                    >
+                      Create one
+                    </button>
+                  </p>
+                </div>
               </div>
             ) : (
               <div>
-                <h3 className="text-2xl font-semibold text-center mb-6 text-white">Create Account</h3>
-                <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className={inputStyles} />
-                <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className={inputStyles} />
-                <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className={inputStyles} />
-                <button onClick={onSignup} className={buttonStyles}>Sign up</button>
-                <p className="text-center mt-4">Already have an account? <button onClick={() => setMode('login')} className={switchModeButtonStyles}>Login</button></p>
+                <h2 className="text-2xl font-bold text-white mb-6 text-center">Create Account</h2>
+                <div className="space-y-4">
+                  <input
+                    placeholder="Username"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    className="w-full p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+                  />
+                  <input
+                    placeholder="Email address"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+                  />
+                  <input
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+                  />
+                  <button
+                    onClick={onSignup}
+                    className="w-full bg-code-green hover:bg-green-600 text-white py-3 rounded-md font-medium transition-colors"
+                  >
+                    Create Account
+                  </button>
+                  <p className="text-center text-gray-400">
+                    Already have an account?{' '}
+                    <button
+                      onClick={() => setMode('login')}
+                      className="text-code-green hover:text-green-400 font-medium"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
+
+      <div className="bg-dark-secondary rounded-lg p-6 border border-gray-700">
+        <h2 className="text-xl font-semibold text-white mb-4">Start Practice Session</h2>
+        <StartPractice />
+      </div>
     </div>
   )
 }
@@ -97,27 +161,71 @@ function StartPractice() {
     setQs(r.data.questions || [])
   }
 
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy': return 'text-code-green'
+      case 'medium': return 'text-code-orange'
+      case 'hard': return 'text-code-red'
+      default: return 'text-gray-400'
+    }
+  }
+
   return (
     <div>
-        <h3 className="text-2xl font-semibold mb-4 text-white">Start a Custom Session</h3>
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <input placeholder="Company (e.g., Google)" value={company} onChange={e => setCompany(e.target.value)} className="flex-grow bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
-            <input placeholder="Topic (e.g., Arrays)" value={topic} onChange={e => setTopic(e.target.value)} className="flex-grow bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
-            <button onClick={start} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-6 rounded transition-colors">Start</button>
-        </div>
-        {qs.length > 0 && (
-            <ul className="mt-6 space-y-3">
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <input
+          placeholder="Company (e.g., Google, Meta, Amazon)"
+          value={company}
+          onChange={e => setCompany(e.target.value)}
+          className="flex-1 p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+        />
+        <input
+          placeholder="Topic (e.g., Arrays, Dynamic Programming)"
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          className="flex-1 p-3 bg-dark-tertiary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent"
+        />
+        <button
+          onClick={start}
+          className="px-6 py-3 bg-code-green hover:bg-green-600 text-white rounded-md font-medium transition-colors"
+        >
+          Generate Questions
+        </button>
+      </div>
+
+      {qs.length > 0 && (
+        <div className="bg-dark-tertiary rounded-lg border border-gray-600">
+          <div className="p-4 border-b border-gray-600">
+            <h3 className="text-lg font-semibold text-white">Practice Questions ({qs.length})</h3>
+          </div>
+          <div className="divide-y divide-gray-600">
             {qs.map((q, i) => (
-                <li key={i} className="bg-gray-700 p-4 rounded-md flex justify-between items-center">
-                <div>
-                    <span className="font-bold text-white">{q.name}</span>
-                    <span className="ml-2 text-sm text-gray-400">[{q.difficulty}]</span>
+              <div key={i} className="p-4 hover:bg-dark-accent transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-white mb-1">{q.name}</h4>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-sm font-medium ${getDifficultyColor(q.difficulty)}`}>
+                        {q.difficulty}
+                      </span>
+                      <span className="text-gray-500">•</span>
+                      <span className="text-sm text-gray-400">Problem #{i + 1}</span>
+                    </div>
+                  </div>
+                  <a
+                    href={q.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-4 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors"
+                  >
+                    Open in LeetCode
+                  </a>
                 </div>
-                <a href={q.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">View on LeetCode</a>
-                </li>
+              </div>
             ))}
-            </ul>
-        )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
