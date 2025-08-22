@@ -6,13 +6,15 @@ export default function Profile(){
   useEffect(()=>{
     API.get('/stats/profile').then(r=>setData(r.data)).catch(()=>{})
   },[])
-  if(!data) return <div style={{padding:24}}>Login to see your profile.</div>
+  if(!data) return <div className="p-6">Login to see your profile.</div>
   return (
-    <div style={{padding:24}}>
-      <h2>Profile</h2>
-      <p>User: {data.username} ({data.email})</p>
-      <p>Solved: {data.solved_count}</p>
-      <p>Attempts: {data.attempts_total} | Accepted: {data.accepted_total}</p>
+    <div className="p-6">
+      <h2 className="text-2xl font-semibold mb-4">Profile</h2>
+      <div className="bg-gray-800 p-6 rounded-lg shadow space-y-2">
+        <p><span className="font-semibold">User:</span> {data.username} <span className="text-gray-400">({data.email})</span></p>
+        <p><span className="font-semibold">Solved:</span> {data.solved_count}</p>
+        <p><span className="font-semibold">Attempts:</span> {data.attempts_total} | <span className="font-semibold">Accepted:</span> {data.accepted_total}</p>
+      </div>
     </div>
   )
 }

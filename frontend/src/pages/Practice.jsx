@@ -26,7 +26,7 @@ export default function Practice(){
     }
   }
   async function run(){
-    const r = await API.post('/practice/run', { language_id: 62, source_code: code, stdin: "" }) // 62 = JavaScript (Node) on Judge0
+    const r = await API.post('/practice/run', { language_id: 62, source_code: code, stdin: "" })
     setResult(r.data)
   }
   async function submit(status='Accepted'){
@@ -43,7 +43,6 @@ export default function Practice(){
     })
     setResult(r.data)
     if(r.data.next){
-      // load next
       setQuestion(r.data.next)
       setStart(Date.now()/1000)
       setTimer(0)
@@ -51,28 +50,26 @@ export default function Practice(){
     }
   }
 
-  useEffect(()=>{
-    return ()=> stopTimer()
-  },[])
+  useEffect(()=>()=>stopTimer(),[])
 
   return (
-    <div style={{padding:24}}>
-      <h2>Practice</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-semibold mb-4">Practice</h2>
       {!question ? (
-        <button onClick={startSession}>Start Session</button>
+        <button onClick={startSession} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded">Start Session</button>
       ) : (
-        <div>
-          <h3>{question.name} [{question.difficulty}]</h3>
-          <p><a href={question.url} target="_blank">Open on LeetCode</a></p>
-          <p><i>Time: {timer}s</i></p>
-          <Editor height="40vh" defaultLanguage="javascript" value={code} onChange={v=>setCode(v)} />
-          <div style={{marginTop:12, display:'flex', gap:8}}>
-            <button onClick={run}>Run Code</button>
-            <button onClick={()=>submit('Accepted')}>Submit (Accepted)</button>
-            <button onClick={()=>submit('Wrong Answer')}>Submit (Not Accepted)</button>
+        <div className="space-y-4">
+          <h3 className="text-xl">{question.name} <span className="text-gray-400">[{question.difficulty}]</span></h3>
+          <p><a href={question.url} target="_blank" className="text-yellow-400">Open on LeetCode</a></p>
+          <p className="italic text-sm">Time: {timer}s</p>
+          <Editor height="40vh" defaultLanguage="javascript" value={code} onChange={v=>setCode(v)} theme="vs-dark" />
+          <div className="flex gap-4">
+            <button onClick={run} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 rounded">Run Code</button>
+            <button onClick={()=>submit('Accepted')} className="px-4 py-2 bg-green-500 hover:bg-green-400 rounded">Submit (Accepted)</button>
+            <button onClick={()=>submit('Wrong Answer')} className="px-4 py-2 bg-red-500 hover:bg-red-400 rounded">Submit (Not Accepted)</button>
           </div>
           {result ? (
-            <pre style={{marginTop:12, background:'#f7f7f7', padding:12}}>{JSON.stringify(result, null, 2)}</pre>
+            <pre className="bg-gray-800 p-4 rounded text-sm overflow-auto">{JSON.stringify(result, null, 2)}</pre>
           ) : null}
         </div>
       )}
