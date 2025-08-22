@@ -2,35 +2,41 @@ import React, { useEffect, useRef, useState } from 'react'
 import API from '../api'
 import Editor from '@monaco-editor/react'
 
-export default function Practice(){
+export default function Practice() {
   const [question, setQuestion] = useState(null)
-  const [code, setCode] = useState('// write code here')
+  const [code, setCode] = useState('// Write your code here and start the timer!')
   const [result, setResult] = useState(null)
   const [start, setStart] = useState(0)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef(null)
 
-  async function startSession(){
+  async function startSession() {
     const r = await API.post('/practice/start')
     const qs = r.data.questions || []
-    if(qs.length>0){
+    if (qs.length > 0) {
       setQuestion(qs[0])
-      setStart(Date.now()/1000)
-      timerRef.current = setInterval(()=> setTimer(prev => prev+1), 1000)
+      setResult(null)
+      setCode('// Happy coding!')
+      setStart(Date.now() / 1000)
+      setTimer(0)
+      timerRef.current = setInterval(() => setTimer(prev => prev + 1), 1000)
     }
   }
-  function stopTimer(){
-    if(timerRef.current){
+
+  function stopTimer() {
+    if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
   }
-  async function run(){
+
+  async function run() {
     const r = await API.post('/practice/run', { language_id: 62, source_code: code, stdin: "" })
     setResult(r.data)
   }
-  async function submit(status='Accepted'){
-    const ended = Date.now()/1000
+
+  async function submit(status = 'Accepted') {
+    const ended = Date.now() / 1000
     stopTimer()
     const r = await API.post('/practice/submit', null, {
       params: {
@@ -42,35 +48,61 @@ export default function Practice(){
       }
     })
     setResult(r.data)
-    if(r.data.next){
+    if (r.data.next) {
       setQuestion(r.data.next)
-      setStart(Date.now()/1000)
+      setStart(Date.now() / 1000)
       setTimer(0)
-      timerRef.current = setInterval(()=> setTimer(prev => prev+1), 1000)
+      timerRef.current = setInterval(() => setTimer(prev => prev + 1), 1000)
     }
   }
 
-  useEffect(()=>()=>stopTimer(),[])
+  useEffect(() => {
+    return () => stopTimer()
+  }, [])
+
+  function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-semibold mb-4">Practice</h2>
+    <div>
+      <h2 className="text-3xl font-bold mb-6 text-white">Practice Session</h2>
       {!question ? (
-        <button onClick={startSession} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded">Start Session</button>
+        <div className="text-center py-20">
+          <button onClick={startSession} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105">
+            Start New Session
+          </button>
+        </div>
       ) : (
-        <div className="space-y-4">
-          <h3 className="text-xl">{question.name} <span className="text-gray-400">[{question.difficulty}]</span></h3>
-          <p><a href={question.url} target="_blank" className="text-yellow-400">Open on LeetCode</a></p>
-          <p className="italic text-sm">Time: {timer}s</p>
-          <Editor height="40vh" defaultLanguage="javascript" value={code} onChange={v=>setCode(v)} theme="vs-dark" />
-          <div className="flex gap-4">
-            <button onClick={run} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 rounded">Run Code</button>
-            <button onClick={()=>submit('Accepted')} className="px-4 py-2 bg-green-500 hover:bg-green-400 rounded">Submit (Accepted)</button>
-            <button onClick={()=>submit('Wrong Answer')} className="px-4 py-2 bg-red-500 hover:bg-red-400 rounded">Submit (Not Accepted)</button>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl font-bold text-white">{question.name} <span className="text-base font-normal text-gray-400">[{question.difficulty}]</span></h3>
+            <a href={question.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">Open on LeetCode</a>
           </div>
-          {result ? (
-            <pre className="bg-gray-800 p-4 rounded text-sm overflow-auto">{JSON.stringify(result, null, 2)}</pre>
-          ) : null}
+          <p className="text-2xl font-mono text-center my-4 bg-gray-900 py-2 rounded-md">{formatTime(timer)}</p>
+          <div className="border border-gray-700 rounded-lg overflow-hidden my-4">
+            <Editor
+              height="50vh"
+              defaultLanguage="javascript"
+              value={code}
+              onChange={v => setCode(v)}
+              theme="vs-dark"
+            />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-4 items-center">
+            <button onClick={run} className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-5 rounded-md transition-colors">Run Code</button>
+            <button onClick={() => submit('Accepted')} className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-md transition-colors">Submit (Accepted)</button>
+            <button onClick={() => submit('Wrong Answer')} className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-5 rounded-md transition-colors">Submit (Not Accepted)</button>
+          </div>
+          {result && (
+            <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-2">Result:</h4>
+                <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-x-auto text-sm">{JSON.stringify(result, null, 2)}</pre>
+            </div>
+          )}
         </div>
       )}
     </div>
