@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - backend/.env
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+      - redis
+
+  frontend:
+    image: node:20
+    working_dir: /app
+    command: sh -c "npm i && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A app.tasks.celery worker --loglevel=INFO
+    env_file:
+      - backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+      - mongo
+
+volumes:
+  mongo_data:
