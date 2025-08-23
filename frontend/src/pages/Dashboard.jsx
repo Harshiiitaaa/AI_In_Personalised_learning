@@ -29,10 +29,12 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
         <p className="text-gray-400">Track your coding progress and start practicing</p>
       </div>
+      {/* Profile Section */}
       <div className="bg-dark-secondary rounded-lg p-6 mb-8 border border-gray-700">
         <div className="flex items-center space-x-4 mb-6">
           <div className="w-12 h-12 bg-code-green rounded-full flex items-center justify-center">
@@ -43,6 +45,7 @@ export default function Dashboard() {
             <p className="text-gray-400">Keep up the great work</p>
           </div>
         </div>
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-dark-tertiary p-4 rounded-lg border border-gray-600">
             <div className="text-2xl font-bold text-code-green">{info.solved_count}</div>
@@ -59,6 +62,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Practice Section */}
       <div className="bg-dark-secondary rounded-lg p-6 border border-gray-700">
         <h2 className="text-xl font-semibold text-white mb-4">Start Practice Session</h2>
         <StartPractice />
