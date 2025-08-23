@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
 import Profile from "./pages/Profile";
 import Layout from "./Layout";
+import Register from './pages/Register';
 
 // Protected route to guard authenticated pages
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -21,6 +22,7 @@ function App() {
       <Routes>
         {/* Public Route: Login */}
         <Route path="/login" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
+        <Route path="register" element={<Register />} />
 
         {/* Protected Routes: All inside Layout */}
         <Route

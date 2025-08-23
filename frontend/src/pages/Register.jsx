@@ -1,38 +1,44 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 
-export default function SignIn({ setIsAuthenticated }) {
+export default function Register() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // Call backend for login
-    const response = await fetch("http://localhost:5000/auth/login", {
+    setLoading(true);
+    const response = await fetch("http://localhost:5000/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, email, password }),
     });
-
+    setLoading(false);
     if (response.ok) {
-      const res = await response.json();
-      // Store the token for session
-      localStorage.setItem('token', res.access_token);
-
-      setIsAuthenticated(true);
-      navigate("/dashboard");
+      alert("Registration successful! Now you can sign in.");
+      navigate("/login");
     } else {
-      alert("Invalid credentials");
+      const err = await response.json();
+      alert(err.message || "Registration failed.");
     }
   };
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
       <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-xl shadow">
-        <h2 className="text-center text-2xl font-bold">Sign In</h2>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <h2 className="text-center text-2xl font-bold">Create Account</h2>
+        <form className="space-y-4" onSubmit={handleRegister}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none"
+            required
+          />
           <input
             type="email"
             placeholder="Email address"
@@ -51,16 +57,17 @@ export default function SignIn({ setIsAuthenticated }) {
           />
           <button
             type="submit"
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded disabled:opacity-60"
+            disabled={loading}
           >
-            Sign In
+            {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
         <p className="text-center text-gray-400">
-          Don’t have an account?{" "}
-          <Link to ="/register" className="text-emerald-400 hover:underline">
-            Create one
-          </Link>
+          Already have an account?{" "}
+          <a href="/login" className="text-emerald-400 hover:underline">
+            Sign in
+          </a>
         </p>
       </div>
     </div>
