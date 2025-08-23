@@ -2,23 +2,42 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useState } from "react";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
+import Practice from "./pages/Practice";
+import Profile from "./pages/Profile";
+import Layout from "./Layout";
+
+// Protected route to guard authenticated pages
+function ProtectedRoute({ isAuthenticated, children }) {
+  return isAuthenticated ? children : <Navigate to="/login" />;
+}
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    localStorage.getItem('token') ? true : false
+  );
 
   return (
     <Router>
       <Routes>
-        {/* Login Page */}
+        {/* Public Route: Login */}
         <Route path="/login" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
 
-        {/* Dashboard Page (Protected) */}
+        {/* Protected Routes: All inside Layout */}
         <Route
-          path="/dashboard"
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
-        />
+          path="/"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="practice" element={<Practice />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
 
-        {/* Default Redirect */}
+        {/* Catch-all: any undefined route redirects to login */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
