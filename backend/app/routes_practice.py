@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 from bson import ObjectId
+from pydantic import BaseModel
 
 from .auth import get_current_user_id
 from .db import db
@@ -8,16 +9,30 @@ from .db import db
 from .recommender import get_initial_questions, next_question
 from .judge0 import run_code
 
+class PracticeStartRequest(BaseModel):
+    company: str | None = None
+    topic: str | None = None
+    difficulty: str | None = None
+
 router = APIRouter(prefix="/practice", tags=["practice"])
 
-
 @router.post("/start")
-async def start(company: str | None = None, topic: str | None = None):
+async def start(data: PracticeStartRequest):
     # REMOVED: The database seeding logic has been removed from this API endpoint.
     # This should be done in a separate, one-time setup script, not on every API call.
     
-    qs = get_initial_questions(company=company, topic=topic)
-    return {"questions": qs}
+    qs = get_initial_questions(
+        company=data.company, 
+        topic=data.topic,
+        difficulty = data.difficulty
+    )
+
+    # Return "problem" or "problems" as frontend expects:
+    if isinstance(qs, list):
+        if len(qs) == 1:
+            return {"problem" : qs[0]}
+        return {"problems" : qs}
+    return {"problems" : []}    # fallback if qs is empty/None
 
 
 @router.post("/run")

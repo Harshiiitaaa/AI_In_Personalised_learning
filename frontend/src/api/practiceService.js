@@ -17,7 +17,7 @@ export const practiceService = {
   },
 
   getUserStats: async () => {
-    const response = await apiClient.get('/practice/stats');
+    const response = await apiClient.get('/stats/profile');
     return response.data;
   },
 };
