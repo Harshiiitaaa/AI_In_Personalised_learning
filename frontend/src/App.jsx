@@ -3,6 +3,7 @@ import { useState } from "react";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
+import Questions from "./pages/Questions";
 import Profile from "./pages/Profile";
 import Layout from "./Layout";
 import Register from './pages/Register';
@@ -37,6 +38,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="practice" element={<Practice />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="questions" element={<Questions />} />
         </Route>
 
         {/* Catch-all: any undefined route redirects to login */}
