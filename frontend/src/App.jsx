@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
@@ -7,6 +7,7 @@ import Questions from "./pages/Questions";
 import Profile from "./pages/Profile";
 import Layout from "./Layout";
 import Register from './pages/Register';
+import API from './api'; // Import your API client
 
 // Protected route to guard authenticated pages
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -14,23 +15,73 @@ function ProtectedRoute({ isAuthenticated, children }) {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() =>
-    localStorage.getItem('token') ? true : false
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Check authentication on app load
+  useEffect(() => {
+    checkAuthenticationStatus();
+  }, []);
+
+  const checkAuthenticationStatus = async () => {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Verify token with backend
+      await API.get('/auth/me');
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-code-green"></div>
+        <span className="ml-4 text-white">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <Router>
       <Routes>
-        {/* Public Route: Login */}
-        <Route path="/login" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
-        <Route path="register" element={<Register />} />
+        {/* Public Routes */}
+        <Route 
+          path="/login" 
+          element={
+            isAuthenticated ? 
+            <Navigate to="/dashboard" replace /> : 
+            <SignIn setIsAuthenticated={setIsAuthenticated} />
+          } 
+        />
+        <Route 
+          path="/register" 
+          element={
+            isAuthenticated ? 
+            <Navigate to="/dashboard" replace /> : 
+            <Register />
+          } 
+        />
 
         {/* Protected Routes: All inside Layout */}
         <Route
           path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout />
+              <Layout setIsAuthenticated={setIsAuthenticated} />
             </ProtectedRoute>
           }
         >
@@ -41,8 +92,11 @@ function App() {
           <Route path="questions" element={<Questions />} />
         </Route>
 
-        {/* Catch-all: any undefined route redirects to login */}
-        <Route path="*" element={<Navigate to="/login" />} />
+        {/* Catch-all: any undefined route redirects based on auth */}
+        <Route 
+          path="*" 
+          element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} 
+        />
       </Routes>
     </Router>
   );
