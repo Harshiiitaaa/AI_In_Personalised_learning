@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { practiceService } from '../api/practiceService';
-import API from '../api';
 
 export default function Dashboard() {
   const [company, setCompany] = useState('');
@@ -33,6 +32,7 @@ export default function Dashboard() {
       
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+
       // If user fetch fails, might need to re-login
       if (error.response?.status === 401) {
         authService.logout();

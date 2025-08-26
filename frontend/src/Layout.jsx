@@ -1,21 +1,22 @@
 import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import API from './api'; // Import your API client
+import { authService } from './authService'; // Import your API client
 
 export default function Layout({ setIsAuthenticated }) {
   const navigate = useNavigate();
 
   const logout = async () => {
     try {
-      // Optional: Call backend logout endpoint
-      await API.post('/auth/logout').catch(() => {
-        // Ignore logout endpoint errors - just clean up locally
-      });
+      authService.logout();
+
+      setIsAuthenticated(false);
+
+      navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      // Clean up authentication state
-      localStorage.removeItem('token');
+
+      localStorage.removeItem('access_token');
+
       setIsAuthenticated(false);
       navigate('/login');
     }

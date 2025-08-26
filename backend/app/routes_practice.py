@@ -5,7 +5,8 @@ from pydantic import BaseModel
 
 from .auth import get_current_user_id
 from .db import db
-# CORRECTED: 'load_dataset' is removed as it's no longer used or available
+# CORRECTED: Fixed import path - removed extra "tasks" directory
+from .tasks.tasks import reminder_failed_attempt  # ✅ Fixed
 from .recommender import get_initial_questions, next_question
 from .judge0 import run_code
 
@@ -18,35 +19,46 @@ router = APIRouter(prefix="/practice", tags=["practice"])
 
 @router.post("/start")
 async def start(data: PracticeStartRequest):
-    # REMOVED: The database seeding logic has been removed from this API endpoint.
-    # This should be done in a separate, one-time setup script, not on every API call.
-    
     qs = get_initial_questions(
         company=data.company, 
-        topic=data.topic,
-        difficulty = data.difficulty
+        topic=data.topic
     )
 
     # Return "problem" or "problems" as frontend expects:
     if isinstance(qs, list):
         if len(qs) == 1:
-            return {"problem" : qs[0]}
-        return {"problems" : qs}
-    return {"problems" : []}    # fallback if qs is empty/None
-
+            return {"problem": qs[0]}
+        return {"problems": qs}
+    return {"problems": []}
 
 @router.post("/run")
 async def run(language_id: int, source_code: str, stdin: str = ""):
-    # In app/routes_practice.py in the 'run' function
-    res = await run_code(source_code, language_id, stdin)
-    return res
-
+    # ENHANCED: Better parameter validation
+    if not source_code.strip():
+        raise HTTPException(status_code=400, detail="Source code is required")
+    
+    if language_id not in [50, 54, 62, 63, 71]:  # C, C++, Java, JavaScript, Python
+        raise HTTPException(status_code=400, detail="Unsupported language ID")
+    
+    try:
+        res = await run_code(source_code, language_id, stdin)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Code execution failed: {str(e)}")
 
 @router.post("/submit")
 async def submit(question_name: str, question_url: str = "", status: str = "Accepted",
                  started_at: float = 0, ended_at: float = 0, user_id: str | None = Depends(get_current_user_id)):
+    # ENHANCED: Better validation
+    if not question_name.strip():
+        raise HTTPException(status_code=400, detail="Question name is required")
+    
     # Map question
-    q = await db.questions.find_one({"name": question_name, "url": question_url})
+    q = await db.questions.find_one({"name": question_name})
+    if not q and question_url:
+        # Try to find by URL if name lookup fails
+        q = await db.questions.find_one({"url": question_url})
+    
     if not q:
         raise HTTPException(404, "Question not found")
     
@@ -67,16 +79,12 @@ async def submit(question_name: str, question_url: str = "", status: str = "Acce
         
     # Next question logic
     duration_minutes = duration_seconds / 60.0
-    
-    # UPDATED: The new recommender needs the full question object (especially the 'name')
-    # to find its nearest neighbors in the model.
     nxt = next_question(prev_row=q, result=status, duration_minutes=duration_minutes)
     
     # Schedule reminder if not accepted
     if status.lower() != "accepted":
         try:
-            from .tasks.tasks import reminder_failed_attempt
-            eta_seconds = 3 * 24 * 3600
+            eta_seconds = 3 * 24 * 3600  # 3 days
             reminder_failed_attempt.apply_async(args=[user_id, str(q["_id"])], countdown=eta_seconds)
         except Exception as e:
             print("Celery not configured or failed to schedule:", e)

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { authService } from "../api/authService";
-import API from '../api';
 
 export default function SignIn({ setIsAuthenticated }) {
   const [email, setEmail] = useState("");

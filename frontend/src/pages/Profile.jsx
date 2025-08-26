@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { authService } from '../api/authService'
 import { practiceService } from '../api/practiceService'
 import { useNavigate } from 'react-router-dom'
-import API from '../api';
 
 export default function Profile() {
   const [data, setData] = useState(null)

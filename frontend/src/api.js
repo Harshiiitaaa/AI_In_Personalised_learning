@@ -8,7 +8,7 @@ const API = axios.create({
 // Request interceptor - add auth token
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -25,7 +25,7 @@ API.interceptors.response.use(
   (error) => {
     // Handle 401 errors globally
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
+      localStorage.removeItem('access_token')
       // Force page refresh to redirect to login
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
@@ -35,6 +35,18 @@ API.interceptors.response.use(
     // Handle network errors
     if (!error.response) {
       console.error('Network error - check if backend is running on port 8000')
+      console.error('Make sure backend services are running:')
+      console.error('- FastAPI server: uvicorn app.main:app --reload')
+      console.error('- MongoDB: mongod')
+      console.error('- Redis: redis-server')
+    }
+    
+    if (error.response?.status === 404) {
+      console.error('API endpoint not found:', error.config?.url)
+    }
+
+    if (error.response?.status >= 500) {
+      console.error('Server error - check backend logs')
     }
     
     return Promise.reject(error)

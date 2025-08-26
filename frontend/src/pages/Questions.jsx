@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { practiceService } from '../api/practiceService';
-import API from '../api';
 
 export default function PracticeStart() {
   const { state } = useLocation();

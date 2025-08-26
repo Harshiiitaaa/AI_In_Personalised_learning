@@ -23,8 +23,9 @@ function App() {
     checkAuthenticationStatus();
   }, []);
 
+  // CORRECTED: Fixed token storage key consistency
   const checkAuthenticationStatus = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     
     if (!token) {
       setIsAuthenticated(false);
@@ -38,7 +39,7 @@ function App() {
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Token validation failed:', error);
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
