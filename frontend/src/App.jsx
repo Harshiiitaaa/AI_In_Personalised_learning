@@ -6,7 +6,7 @@ import Practice from "./pages/Practice";
 import Questions from "./pages/Questions";
 import Profile from "./pages/Profile";
 import Layout from "./Layout";
-import Register from './pages/Register';
+import Register from "./pages/Register";
 import API from './api';
 
 // Protected route to guard authenticated pages
