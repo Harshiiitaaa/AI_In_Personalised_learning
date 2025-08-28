@@ -2,18 +2,34 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 from bson import ObjectId
 from pydantic import BaseModel
+from typing import Optional
 
 from .auth import get_current_user_id
 from .db import db
-# CORRECTED: Fixed import path - removed extra "tasks" directory
-from .tasks.tasks import reminder_failed_attempt  # ✅ Fixed
+from .tasks.tasks import reminder_failed_attempt
 from .recommender import get_initial_questions, next_question
 from .judge0 import run_code
+from .models import SubmissionCreate 
+
+# --- Pydantic Models ---
 
 class PracticeStartRequest(BaseModel):
-    company: str | None = None
-    topic: str | None = None
-    difficulty: str | None = None
+    company: Optional[str] = None
+    topic: Optional[str] = None
+    difficulty: Optional[str] = None
+
+# ✅ ADDED: A new model to define the structure of the submission JSON
+class SubmissionCreate(BaseModel):
+    question_name: str
+    status: str
+    started_at: float
+    ended_at: float
+    question_url: Optional[str] = None
+
+class RunCodeRequest(BaseModel):
+    language_id: int
+    source_code: str
+    stdin: Optional[str] = ""
 
 router = APIRouter(prefix="/practice", tags=["practice"])
 
@@ -23,8 +39,6 @@ async def start(data: PracticeStartRequest):
         company=data.company, 
         topic=data.topic
     )
-
-    # Return "problem" or "problems" as frontend expects:
     if isinstance(qs, list):
         if len(qs) == 1:
             return {"problem": qs[0]}
@@ -32,62 +46,58 @@ async def start(data: PracticeStartRequest):
     return {"problems": []}
 
 @router.post("/run")
-async def run(language_id: int, source_code: str, stdin: str = ""):
-    # ENHANCED: Better parameter validation
-    if not source_code.strip():
+async def run(payload: RunCodeRequest):
+    if not payload.source_code.strip():
         raise HTTPException(status_code=400, detail="Source code is required")
     
-    if language_id not in [50, 54, 62, 63, 71]:  # C, C++, Java, JavaScript, Python
+    if payload.language_id not in [50, 54, 62, 63, 71]:
         raise HTTPException(status_code=400, detail="Unsupported language ID")
     
     try:
-        res = await run_code(source_code, language_id, stdin)
+        res = await run_code(payload.source_code, payload.language_id, payload.stdin)
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Code execution failed: {str(e)}")
 
+# ✅ UPDATED: The /submit endpoint now uses the SubmissionCreate model
 @router.post("/submit")
-async def submit(question_name: str, question_url: str = "", status: str = "Accepted",
-                 started_at: float = 0, ended_at: float = 0, user_id: str | None = Depends(get_current_user_id)):
-    # ENHANCED: Better validation
-    if not question_name.strip():
-        raise HTTPException(status_code=400, detail="Question name is required")
-    
-    # Map question
-    q = await db.questions.find_one({"name": question_name})
-    if not q and question_url:
-        # Try to find by URL if name lookup fails
-        q = await db.questions.find_one({"url": question_url})
+async def submit(payload: SubmissionCreate, user_id: str = Depends(get_current_user_id)):
+    # Find the question using data from the payload object
+    q = await db.questions.find_one({"name": payload.question_name})
+    if not q and payload.question_url:
+        q = await db.questions.find_one({"url": payload.question_url})
     
     if not q:
-        raise HTTPException(404, "Question not found")
+        raise HTTPException(status_code=404, detail="Question not found")
     
-    duration_seconds = int(max(0, ended_at - started_at))
+    # Calculate duration from payload timestamps
+    duration_seconds = int(max(0, payload.ended_at - payload.started_at))
+    
     attempt = {
         "user_id": ObjectId(user_id),
         "question_id": q["_id"],
-        "status": status,
-        "started_at": datetime.fromtimestamp(started_at) if started_at else datetime.utcnow(),
-        "ended_at": datetime.fromtimestamp(ended_at) if ended_at else datetime.utcnow(),
+        "status": payload.status,
+        "started_at": datetime.fromtimestamp(payload.started_at),
+        "ended_at": datetime.fromtimestamp(payload.ended_at),
         "duration_seconds": duration_seconds
     }
     await db.attempts.insert_one(attempt)
     
-    # Update solved_count on Accepted
-    if status.lower() == "accepted":
+    # Update solved count if the status is "Accepted"
+    if payload.status.lower() == "accepted":
         await db.users.update_one({"_id": ObjectId(user_id)}, {"$inc": {"solved_count": 1}})
         
-    # Next question logic
+    # Get the next recommended question
     duration_minutes = duration_seconds / 60.0
-    nxt = next_question(prev_row=q, result=status, duration_minutes=duration_minutes)
+    nxt = next_question(prev_row=q, result=payload.status, duration_minutes=duration_minutes)
     
-    # Schedule reminder if not accepted
-    if status.lower() != "accepted":
+    # Schedule a reminder if the attempt was not successful
+    if payload.status.lower() != "accepted":
         try:
             eta_seconds = 3 * 24 * 3600  # 3 days
             reminder_failed_attempt.apply_async(args=[user_id, str(q["_id"])], countdown=eta_seconds)
         except Exception as e:
-            print("Celery not configured or failed to schedule:", e)
+            print(f"Celery not configured or failed to schedule: {e}")
             
-    message = "Great effort! Every attempt is a step forward." if status.lower() != "accepted" else "Nice! Moving up."
+    message = "Great effort! Every attempt is a step forward." if payload.status.lower() != "accepted" else "Nice! Moving up."
     return {"next": nxt, "message": message}

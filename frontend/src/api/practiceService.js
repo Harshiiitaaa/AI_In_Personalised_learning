@@ -1,4 +1,4 @@
-import apiClient from './client';
+import API from '../api';
 
 // Language ID mappings for Judge0 API
 const LANGUAGE_MAPPINGS = {

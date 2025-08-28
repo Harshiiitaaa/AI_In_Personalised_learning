@@ -6,7 +6,7 @@ export const authService = {
     try {
       const response = await API.post('/auth/login', credentials);
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('access_token', response.data.access_token);
       }
       return response.data;
     } catch (error) {
@@ -32,12 +32,12 @@ export const authService = {
 
   // Logout user
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
   },
 
   // Check if user is authenticated
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('access_token');
   },
 };
 

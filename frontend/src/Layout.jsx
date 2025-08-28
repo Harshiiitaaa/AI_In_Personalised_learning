@@ -1,8 +1,8 @@
 import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { authService } from './authService'; // Import your API client
+import { authService } from './api/authService'; // Import your API client
 
-export default function Layout({ setIsAuthenticated }) {
+export default function Layout({ user, setIsAuthenticated }) {
   const navigate = useNavigate();
 
   const logout = async () => {
@@ -36,11 +36,11 @@ export default function Layout({ setIsAuthenticated }) {
                   className="text-gray-300 hover:text-white hover:bg-dark-tertiary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Dashboard
                 </Link>
-                <Link 
+                {/* <Link 
                   to="/practice" 
                   className="text-gray-300 hover:text-white hover:bg-dark-tertiary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Practice
-                </Link>
+                </Link> */}
                 <Link 
                   to="/questions" 
                   className="text-gray-300 hover:text-white hover:bg-dark-tertiary px-3 py-2 rounded-md text-sm font-medium transition-colors">
@@ -65,7 +65,7 @@ export default function Layout({ setIsAuthenticated }) {
       </nav>
       
       <main className="flex-1">
-        <Outlet />
+        <Outlet context={{ user }} />
       </main>
     </div>
   );

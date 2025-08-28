@@ -1,75 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {  useOutletContext, useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { practiceService } from '../api/practiceService';
 
 export default function Dashboard() {
+  const { user } = useOutletContext(); 
+  
   const [company, setCompany] = useState('');
   const [topic, setTopic] = useState('');
-  const [userInfo, setUserInfo] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [startSessionLoading, setStartSessionLoading] = useState(false);
+  const [startSessionLoading, setStartSessionLoading] = useState(false); 
   const navigate = useNavigate();
 
-  // Load user data and statistics on component mount
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch user info and stats in parallel
-      const [user, stats] = await Promise.all([
-        authService.getCurrentUser(),
-        practiceService.getUserStats()
-      ]);
-      
-      setUserInfo(user);
-      setUserStats(stats);
-      
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-
-      // If user fetch fails, might need to re-login
-      if (error.response?.status === 401) {
-        authService.logout();
-        navigate('/login');
+    // Now you only need to fetch the stats
+    const loadStats = async () => {
+      try {
+        setLoading(true);
+        const stats = await practiceService.getUserStats();
+        setUserStats(stats);
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    loadStats();
+  }, []);
 
   // Start a practice session with real API call
   const startPracticeSession = async () => {
+    console.log("1. 'Start Practice' button clicked.");
     setStartSessionLoading(true);
     
     try {
       // Call the practice service to start a session
+      console.log("2. Calling practiceService.startSession with:", { company, topic });
       const sessionData = await practiceService.startSession({
         company: company.trim() || null,
         topic: topic.trim() || null,
         difficulty: 'mixed'
       });
       
+      console.log("3. Received sessionData from backend:", sessionData);
+
+      const questionToSolve = sessionData.problem || (sessionData.problems && sessionData.problems[0]);
+
+      console.log("4. Extracted questionToSolve:", questionToSolve);
+
       // Navigate to the practice solve page with the session data
-      navigate('/practice/solve', {
+      if (questionToSolve){
+        console.log("5. A question was found. Navigating to /practice...");
+        navigate('/questions', {
         state: {
-          question: sessionData.problem,
-          sessionId: sessionData.session_id,
-          start: 0,
+          sessionData: sessionData, 
+          // Pass the filters too
           company: company,
-          topic: topic
+          topic: topic,
         }
       });
-      
+      } else{
+        console.log("5. No question found in the response. Showing alert.");
+        alert("No practice questions found for the selected criteria. Please try again.");
+      }
     } catch (error) {
       console.error('Failed to start practice session:', error);
       alert(error.message || 'Failed to start practice session. Please try again.');
     } finally {
+      console.log("6. Finished startPracticeSession function.");
       setStartSessionLoading(false);
     }
   };
@@ -98,12 +97,12 @@ export default function Dashboard() {
         <div className="flex items-center space-x-4 mb-6">
           <div className="w-12 h-12 bg-code-green rounded-full flex items-center justify-center">
             <span className="text-lg font-bold text-white">
-              {userInfo?.username?.charAt(0).toUpperCase() || userInfo?.name?.charAt(0).toUpperCase() || 'U'}
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
             </span>
           </div>
           <div>
             <h2 className="text-xl font-semibold text-white">
-              Welcome back, {userInfo?.username || userInfo?.name || 'User'}!
+              Welcome back, {user?.username || 'User'}!
             </h2>
             <p className="text-gray-400">Keep up the great work</p>
           </div>

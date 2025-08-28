@@ -7,7 +7,7 @@ import Questions from "./pages/Questions";
 import Profile from "./pages/Profile";
 import Layout from "./Layout";
 import Register from './pages/Register';
-import API from './api'; // Import your API client
+import API from './api';
 
 // Protected route to guard authenticated pages
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -16,6 +16,7 @@ function ProtectedRoute({ isAuthenticated, children }) {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Check authentication on app load
@@ -35,8 +36,9 @@ function App() {
 
     try {
       // Verify token with backend
-      await API.get('/auth/me');
+      const response = await API.get('/auth/me'); 
       setIsAuthenticated(true);
+      setUser(response.data);
     } catch (error) {
       console.error('Token validation failed:', error);
       localStorage.removeItem('access_token');
@@ -82,7 +84,7 @@ function App() {
           path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout setIsAuthenticated={setIsAuthenticated} />
+              <Layout user = {user} setIsAuthenticated={setIsAuthenticated} />
             </ProtectedRoute>
           }
         >

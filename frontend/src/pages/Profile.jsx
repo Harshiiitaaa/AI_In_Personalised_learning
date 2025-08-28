@@ -128,7 +128,7 @@ export default function Profile() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-gray-700 p-6 rounded-lg text-center hover:bg-gray-650 transition-colors">
-            <div className="text-4xl font-bold text-cyan-400 mb-2">{data.solved_count}</div>
+            <div className="text-4xl font-bold text-cyan-400 mb-2">{data.accepted_total}</div>
             <p className="text-lg text-gray-300">Problems Solved</p>
           </div>
           <div className="bg-gray-700 p-6 rounded-lg text-center hover:bg-gray-650 transition-colors">

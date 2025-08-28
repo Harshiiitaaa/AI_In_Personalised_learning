@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "no-reply@dsawithai.local"
 
+    VITE_API_URL: Optional[str] = None 
+    
     class Config:
         env_file = ".env"
 

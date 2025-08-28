@@ -39,3 +39,10 @@ class Attempt(BaseModel):
     started_at: datetime
     ended_at: datetime
     duration_seconds: int
+
+class SubmissionCreate(BaseModel):
+    question_name: str
+    status: str
+    started_at: float
+    ended_at: float
+    question_url: Optional[str] = None
