@@ -1,13 +1,23 @@
-from fastapi import APIRouter
-from .config import settings
-import os, json
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from .chatbot import get_gemini_response
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
+class ChatRequest(BaseModel):
+    message: str
+    question_context: str = "" # The name or description of the current problem
+
 @router.post("/ask")
-async def ask(query: str):
-    # Placeholder LLM integration; returns a canned hint if no API key configured.
-    if not settings.OPENAI_API_KEY and not settings.GEMINI_API_KEY:
-        return {"answer": "Hint: Break the problem down. Think about edge cases and start with a simple approach."}
-    # Pseudocode (avoid hard dependency to run without keys)
-    return {"answer": "LLM response would appear here (configure OPENAI_API_KEY or GEMINI_API_KEY)."}
+async def ask(payload: ChatRequest):
+    if not payload.message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+    
+    try:
+        # Get the response from our new chatbot logic
+        answer = await get_gemini_response(payload.message, payload.question_context)
+        return {"answer": answer}
+    except Exception as e:
+        print(f"Chat endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get a response from the chatbot.")
+

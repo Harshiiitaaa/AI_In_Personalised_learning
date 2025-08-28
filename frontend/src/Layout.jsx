@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { authService } from './api/authService'; // Import your API client
+import Chatbot from './components/Chatbot';
 
 export default function Layout({ user, setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -67,6 +68,8 @@ export default function Layout({ user, setIsAuthenticated }) {
       <main className="flex-1">
         <Outlet context={{ user }} />
       </main>
+
+      <Chatbot />
     </div>
   );
 }

@@ -70,5 +70,10 @@ export const practiceService = {
 
   getLanguageId: (language) => {
     return LANGUAGE_MAPPINGS[language.toLowerCase()] || 63;
+  },
+
+  ask: async (message, question_context) => {
+    const response = await API.post('/chat/ask', { message, question_context });
+    return response.data;
   }
 };
