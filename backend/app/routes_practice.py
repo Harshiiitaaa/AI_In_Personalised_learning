@@ -116,12 +116,12 @@ async def submit(payload: SubmissionCreate, user_id: str = Depends(get_current_u
     )
     
     # Schedule a reminder if the attempt was not successful
-    if payload.status.lower() != "accepted":
-        try:
-            reminder_failed_attempt.apply_async(args=[user_id, str(q["_id"])], 
-                                                countdown=settings.CELERY_REMINDER_DELAY_SECONDS)
-        except Exception as e:
-            print(f"Celery not configured or failed to schedule: {e}")
+    # if payload.status.lower() != "accepted":
+    #     try:
+    #         reminder_failed_attempt.apply_async(args=[user_id, str(q["_id"])], 
+    #                                             countdown=settings.CELERY_REMINDER_DELAY_SECONDS)
+    #     except Exception as e:
+    #         print(f"Celery not configured or failed to schedule: {e}")
             
     message = "Great effort! Every attempt is a step forward." if payload.status.lower() != "accepted" else "Nice! Moving up."
     return {"next": nxt, "message": message}
