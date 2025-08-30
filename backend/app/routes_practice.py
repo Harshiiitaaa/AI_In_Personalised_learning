@@ -10,6 +10,7 @@ from .tasks.tasks import reminder_failed_attempt
 from .recommender import get_initial_questions, next_question
 from .judge0 import run_code
 from .models import SubmissionCreate 
+from .config import settings
 
 # --- Pydantic Models ---
 
@@ -87,15 +88,38 @@ async def submit(payload: SubmissionCreate, user_id: str = Depends(get_current_u
     if payload.status.lower() == "accepted":
         await db.users.update_one({"_id": ObjectId(user_id)}, {"$inc": {"solved_count": 1}})
         
-    # Get the next recommended question
+   # --- ✅ NEW: Fetch AND Enrich user's last 10 attempts ---
+    recent_attempts_cursor = db.attempts.find(
+        {"user_id": ObjectId(user_id)}
+    ).sort("ended_at", -1).limit(10)
+    
+    raw_attempts = await recent_attempts_cursor.to_list(length=10)
+    
+    enriched_attempts = []
+    for att in raw_attempts:
+        # For each attempt, find the corresponding question in the DB
+        question_details = await db.questions.find_one({"_id": att["question_id"]})
+        if question_details:
+            # Add the details to the attempt dictionary
+            att["difficulty"] = question_details.get("difficulty")
+            enriched_attempts.append(att)
+    # --- END OF NEW CODE ---
+
     duration_minutes = duration_seconds / 60.0
-    nxt = next_question(prev_row=q, result=payload.status, duration_minutes=duration_minutes)
+    # --- MODIFIED: Pass the new enriched data to the recommender ---
+    nxt = next_question(
+        prev_row=q,
+        result=payload.status,
+        duration_minutes=duration_minutes,
+        recent_attempts=enriched_attempts, # 👈 Pass the enriched list
+        solved_question_names=set() # You may want to fetch solved names here
+    )
     
     # Schedule a reminder if the attempt was not successful
     if payload.status.lower() != "accepted":
         try:
-            eta_seconds = 3 * 24 * 3600  # 3 days
-            reminder_failed_attempt.apply_async(args=[user_id, str(q["_id"])], countdown=eta_seconds)
+            reminder_failed_attempt.apply_async(args=[user_id, str(q["_id"])], 
+                                                countdown=settings.CELERY_REMINDER_DELAY_SECONDS)
         except Exception as e:
             print(f"Celery not configured or failed to schedule: {e}")
             

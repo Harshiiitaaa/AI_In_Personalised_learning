@@ -38,9 +38,11 @@ async def signup(payload: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(payload: UserLogin):
+
     user = await db.users.find_one({"email": payload.email})
     if not user or not verify_password(payload.password, user["password"]):
         raise HTTPException(status_code=400, detail="Invalid email or password")
+    
     token = create_access_token(str(user["_id"]))
     logger.info(f"User {user['username']} logged in successfully")
     return Token(access_token=token)

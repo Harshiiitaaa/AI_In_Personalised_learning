@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from celery import Celery
 from .config import settings
 
@@ -7,6 +10,7 @@ celery = Celery(
     "dsa_with_ai",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
+    include=['app.tasks.tasks']
 )
 
 celery.conf.task_serializer = "json"

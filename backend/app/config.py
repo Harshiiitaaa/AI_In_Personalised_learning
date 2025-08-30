@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import AnyUrl
 from typing import List, Optional
+import os
 
 class Settings(BaseSettings):
     SECRET_KEY: str = "change_me_super_secret"
@@ -29,6 +30,8 @@ class Settings(BaseSettings):
 
     VITE_API_URL: Optional[str] = None 
     
+    CELERY_REMINDER_DELAY_SECONDS: int = int(os.getenv("CELERY_REMINDER_DELAY_SECONDS", 3*24*3600))
+
     class Config:
         env_file = ".env"
 

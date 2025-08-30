@@ -1,21 +1,21 @@
 import smtplib
 from email.mime.text import MIMEText
 from bson import ObjectId
-from celery import Celery
+from ..celery_app import celery
 from pymongo import MongoClient
 # CORRECTED: Added import for settings
 from ..config import settings
 
 # 1. Setup Celery - CORRECTED: Use settings instead of hardcoded values
-celery = Celery(
-    'tasks',
-    broker=settings.REDIS_URL,    # ✅ Fixed: use settings
-    backend=settings.REDIS_URL    # ✅ Fixed: use settings
-)
+# celery = Celery(
+#     'tasks',
+#     broker=settings.REDIS_URL,    # ✅ Fixed: use settings
+#     backend=settings.REDIS_URL    # ✅ Fixed: use settings
+# )
 
 # 2. Setup Database Connection - CORRECTED: Use settings instead of hardcoded values
-client = MongoClient(settings.MONGO_URL)  # ✅ Fixed: use settings
-db = client[settings.MONGO_DB]            # ✅ Fixed: use settings
+# client = MongoClient(settings.MONGO_URL)  # ✅ Fixed: use settings
+# db = client[settings.MONGO_DB]            # ✅ Fixed: use settings
 
 # 3. Your Email Function (simplified for testing)
 # This function will print to the console to confirm the task works.
@@ -64,6 +64,10 @@ def reminder_failed_attempt(user_id: str, question_id: str):
     Fetches user and question details from the database and sends a reminder email.
     IMPROVED: Added better error handling and logging
     """
+
+    client = MongoClient(settings.MONGO_URL)
+    db = client.get_database(settings.MONGO_DB)
+
     try:
         # Fetch user + question to compose email
         user = db.users.find_one({"_id": ObjectId(user_id)})
@@ -91,4 +95,6 @@ def reminder_failed_attempt(user_id: str, question_id: str):
             
     except Exception as e:
         print(f"❌ Task failed: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        raise e
+    finally:
+        client.close()

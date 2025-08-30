@@ -63,6 +63,10 @@ export default function PracticeSolve() {
 
 // In Practice.jsx
 
+const currentUserId = "some_id_from_your_auth_state"; 
+
+// In PracticeSolve.jsx
+
 const handleSubmitAndGetNext = async (attemptStatus) => {
     if (!question.name) {
       setResult({ error: "Question information is missing." });
@@ -82,17 +86,21 @@ const handleSubmitAndGetNext = async (attemptStatus) => {
 
       const response = await practiceService.submitSolution(submissionData);
 
-      // --- NEW NAVIGATION LOGIC ---
-      // Always navigate back to the questions page
+      // --- ✅ FIXED NAVIGATION LOGIC ---
+      // Only tell the next page that the problem was solved if the status is "Accepted".
+      const navigationState = {
+        nextProblem: response.next,
+      };
+
+      if (attemptStatus === 'Accepted') {
+        navigationState.solvedProblemName = question.name;
+      }
+      
       navigate('/questions', {
-        state: {
-          // Pass the newly recommended problem
-          nextProblem: response.next, 
-          // Pass the name of the problem that was just solved
-          solvedProblemName: question.name, 
-        },
-        replace: true // Use replace to manage browser history
+        state: navigationState,
+        replace: true
       });
+      // --- END OF FIX ---
 
     } catch (error) {
       console.error('Submission failed:', error);
@@ -104,6 +112,7 @@ const handleSubmitAndGetNext = async (attemptStatus) => {
       setSubmitLoading(false);
     }
 };
+
 
   const supportedLanguages = ['javascript', 'python', 'java', 'cpp', 'c'];
 
