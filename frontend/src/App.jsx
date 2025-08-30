@@ -39,6 +39,7 @@ function App() {
       const response = await API.get('/auth/me'); 
       setIsAuthenticated(true);
       setUser(response.data);
+
     } catch (error) {
       console.error('Token validation failed:', error);
       localStorage.removeItem('access_token');
@@ -67,7 +68,7 @@ function App() {
           element={
             isAuthenticated ? 
             <Navigate to="/dashboard" replace /> : 
-            <SignIn setIsAuthenticated={setIsAuthenticated} />
+            <SignIn setIsAuthenticated={setIsAuthenticated} setUser={setUser}/>
           } 
         />
         <Route 

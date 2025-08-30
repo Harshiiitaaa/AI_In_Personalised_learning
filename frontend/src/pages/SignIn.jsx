@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../api/authService";
+import API from "../api"; // Make sure you import your configured axios instance
 
-export default function SignIn({ setIsAuthenticated }) {
+export default function SignIn({ setIsAuthenticated, setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,15 +16,19 @@ export default function SignIn({ setIsAuthenticated }) {
     setError("");
 
     try {
-      // Use authService instead of direct fetch
-      const response = await authService.login({ email, password });
+      // Step 1: Log in. This function's main job is to get and store the auth token.
+      await authService.login({ email, password });
       
-      console.log("Login successful:", response);
+      // Step 2: Now that the token is stored, immediately fetch the user's data.
+      const userDataResponse = await API.get('/auth/me');
       
-      // Set authentication state
+      console.log("Login successful, user data fetched:", userDataResponse.data);
+
+      // Step 3: Update BOTH pieces of state in the parent App component.
       setIsAuthenticated(true);
+      setUser(userDataResponse.data); // This is the critical step.
       
-      // Navigate to dashboard
+      // Step 4: Now, navigate to the dashboard.
       navigate("/dashboard");
       
     } catch (error) {
@@ -59,7 +63,6 @@ export default function SignIn({ setIsAuthenticated }) {
           <p className="text-gray-400">Welcome back to DSAWithAI</p>
         </div>
         
-        {/* Display error message if exists */}
         {error && (
           <div className="bg-red-600 text-white p-3 rounded text-center text-sm">
             {error}
@@ -104,3 +107,4 @@ export default function SignIn({ setIsAuthenticated }) {
     </div>
   );
 }
+

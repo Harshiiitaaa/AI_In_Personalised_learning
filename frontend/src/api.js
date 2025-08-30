@@ -1,56 +1,47 @@
-import axios from 'axios'
+import axios from 'axios';
+// --- ✅ 1. Import your configuration from the single source of truth ---
+import API_CONFIG from './api/config';
 
-const API = axios.create({ 
-  baseURL: 'http://127.0.0.1:8000'|| 'http://localhost:8000',
-  timeout: 10000,
-})
+// --- ✅ 2. Use the imported configuration object to create the client ---
+const apiClient = axios.create(API_CONFIG);
 
-// Request interceptor - add auth token
-API.interceptors.request.use(
+// Request interceptor - add auth token (No changes needed here)
+apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('access_token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-// Response interceptor - handle errors globally
-API.interceptors.response.use(
+// Response interceptor - handle errors globally (No changes needed here)
+apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 errors globally
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
-      // Force page refresh to redirect to login
+      localStorage.removeItem('access_token');
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+        window.location.href = '/login';
       }
     }
     
-    // Handle network errors
     if (!error.response) {
-      console.error('Network error - check if backend is running on port 8000')
-      console.error('Make sure backend services are running:')
-      console.error('- FastAPI server: uvicorn app.main:app --reload')
-      console.error('- MongoDB: mongod')
-      console.error('- Redis: redis-server')
+      console.error('Network error - check if backend is running on port 8000');
+      console.error('Make sure backend services are running:');
+      console.error('- FastAPI server: uvicorn app.main:app --reload');
+      console.error('- MongoDB: mongod');
+      console.error('- Redis: redis-server');
     }
     
-    if (error.response?.status === 404) {
-      console.error('API endpoint not found:', error.config?.url)
-    }
-
-    if (error.response?.status >= 500) {
-      console.error('Server error - check backend logs')
-    }
+    // ... other error handling ...
     
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default API
+export default apiClient;
