@@ -1,81 +1,147 @@
-# DSAWithAI (Fresh Build)
+# Adaptive DSA Practice & AI Tutoring Platform
 
-A full-stack, resume-ready DSA practice platform with:
-- FastAPI backend (auth, practice flow, Judge0 integration, adaptive recommendations)
-- React (Vite) frontend with Monaco editor, timer, dashboard/profile
-- MongoDB for persistence
-- Celery + Redis for 3-day reminders on failed attempts
-- Optional Chatbot via OpenAI/Gemini API
-- Dockerized for one-command startup
+A full‑stack platform for coding interview preparation that *adapts* problem difficulty, provides an in‑browser multi-language editor with remote execution, and offers on-demand AI hints/explanations.
 
-## Quick Start (Docker - recommended)
+## Key Features
+- **Adaptive Recommendation**: Confidence-based difficulty progression using recent attempt outcomes.
+- **AI Tutor (Gemini)**: Contextual hints or full solutions via prompt-engineered LLM calls.
+- **Real-Time Code Execution**: Judge0 integration (JS, Python, Java, C, C++) with async polling.
+- **Progress Analytics**: Streak, success rate, recent problems, attempt history.
+- **Session Persistence**: Dynamic queue of problems maintained across navigation.
+- **Extensible Architecture**: FastAPI async services + optional Celery/Redis tasks (reminders, future spaced repetition).
 
-```bash
-git clone <this project>
-cd DSAWithAI
-cp backend/.env.example backend/.env  # edit the values
-# Optional: put your Judge0 RapidAPI creds and OPENAI_API_KEY
+## Architecture Overview
+| Layer      | Tech / Tools |
+|------------|--------------|
+| Frontend   | React, Vite, Monaco Editor, Axios, Tailwind-esque utilities |
+| Backend    | FastAPI (async), Motor (MongoDB), Pydantic Settings |
+| ML / Logic | scikit-learn (TF-IDF + NearestNeighbors), heuristic confidence scoring |
+| AI Tutor   | Gemini (Google Generative AI) |
+| Execution  | Judge0 API |
+| Background | Celery + Redis (optional, currently for reminder scaffolding) |
+| Data Store | MongoDB (users, questions, attempts) |
 
-docker compose up --build
-```
+## Data & Recommender
+1. CSV ingestion normalizes question fields.
+2. Topics tokenized → TF-IDF vectors.
+3. Numerical features scaled (acceptance_rate, frequency, rating, difficulty_numeric).
+4. Concatenated feature space → cosine similarity search (NearestNeighbors).
+5. Confidence score decides target difficulty band for next recommendation.
 
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000/docs (OpenAPI docs)
-- MongoDB: localhost:27017
-- Redis: localhost:6379
+## Confidence Strategy (Simplified)
+| Score Range | Strategy |
+|-------------|----------|
+| > 60        | Aggressive (jump up difficulty) |
+| 21–60       | Standard (conditional escalation) |
+| ≤ 20        | Conservative (reinforce or step down) |
 
-## Running without Docker (dev only)
+## Getting Started
 
-Backend:
+### Prerequisites
+- Python 3.11+  
+- MongoDB running locally (or URI)  
+- Node.js 18+  
+- (Optional) Redis for Celery tasks  
+- Gemini + Judge0 API keys (optional; features degrade gracefully)
+
+### Backend Setup
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate  # on Windows: .venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # edit values
-uvicorn app.main:app --reload --port 8000
+cp .env.example .env   # fill in keys (SECRET_KEY, MONGO_URL, GEMINI_API_KEY, etc.)
+python scripts/import_questions.py leetcode_dataset.csv  # optional ingestion
+uvicorn app.main:app --reload
 ```
 
-Worker:
-```bash
-cd backend
-celery -A app.tasks.celery worker --loglevel=INFO
-```
-
-Frontend:
+### Frontend Setup
 ```bash
 cd frontend
-npm i
+npm install
 npm run dev
 ```
 
-## Environment Variables
+### Optional: Celery Worker
+```bash
+celery -A app.celery_app.celery worker -l info
+```
 
-See `backend/.env.example`. Minimum to change:
-- `SECRET_KEY` (any random string)
-- `ALLOWED_ORIGINS` (default is http://localhost:5173)
-- For real code execution add Judge0 creds:
-  - `JUDGE0_URL=https://judge0-ce.p.rapidapi.com`
-  - `JUDGE0_KEY=YOUR_KEY`
-  - `JUDGE0_HOST_HEADER=judge0-ce.p.rapidapi.com`
-- For reminders via email, set SMTP vars; otherwise logs are printed.
+### Environment Variables (Sample)
+```
+SECRET_KEY=CHANGE_ME
+MONGO_URL=mongodb://localhost:27017
+MONGO_DB=dsa_with_ai
+REDIS_URL=redis://localhost:6379/0
+GEMINI_API_KEY=YOUR_GEMINI_KEY
+JUDGE0_URL=https://judge0-ce.p.rapidapi.com
+JUDGE0_KEY=YOUR_RAPIDAPI_KEY
+JUDGE0_HOST_HEADER=judge0-ce.p.rapidapi.com
+```
 
-## Features Implemented
+### API Highlights
+| Endpoint                 | Method | Description |
+|--------------------------|--------|-------------|
+| /auth/signup             | POST   | Register user |
+| /auth/login              | POST   | Obtain JWT |
+| /auth/me                 | GET    | Current user profile |
+| /practice/start          | POST   | Fetch initial problem(s) |
+| /practice/run            | POST   | Execute code via Judge0 |
+| /practice/submit         | POST   | Record attempt + get next recommendation |
+| /stats/profile           | GET    | User stats (streak, success rate) |
+| /chat/ask                | POST   | AI tutor hint/answer |
 
-- ✅ Sign up / Login (JWT)
-- ✅ Dashboard shows user & solved count
-- ✅ Start session by company/topic or general
-- ✅ Problem view: question + LeetCode link + Monaco editor + visible timer
-- ✅ Run code (Judge0) + Submit
-- ✅ Adaptive next question (Easy/Medium/Hard based on time & result)
-- ✅ Failed attempt schedules 3-day reminder via Celery + Redis
-- ✅ Profile page with stats
-- ✅ Chat endpoint stub (enable by adding API key)
+## Folder Structure (Recommended)
+```
+backend/
+  app/
+    core/ (config, logging)
+    auth/
+    practice/
+    recommender/
+    chatbot/
+    execution/
+    tasks/
+    schemas/
+    db/
+frontend/
+  src/
+    api/
+    pages/
+    components/
+    hooks/
+    styles/
+```
 
-## Notes
+## Future Enhancements
+- Server-side validation of durations & anti-abuse
+- Streaming AI responses
+- Topic mastery heatmaps
+- Spaced repetition scheduling (Celery beat)
+- Rate limiting & refresh tokens
+- Persisted recommender artifacts (avoid rebuild on every start)
+- Test suite expansion + CI integration
 
-- The dataset is loaded from `backend/dataset/leetcode_dataset.csv` and imported into Mongo on first `/practice/start`.
-- Judge0 language IDs vary. In the UI we use 62 (Node.js). Change as you like.
-- Email reminders print to console unless SMTP envs are provided.
-- This repo is structured to be recruiter-friendly and easy to demo.
+## Metrics (Sample – Replace with Real)
+- ~XX questions ingested
+- Recommendation latency: ~XX ms
+- Execution turnaround median: ~X.X s
+- Tutor success (non-error) responses: ~XX%
+- Average confidence uplift after correct fast solves: +YY points
 
-Good luck and ship it 🚀
+## Testing (Suggested)
+```bash
+pytest -q
+```
+(Placeholder: Add unit tests for recommender, auth, submit flow.)
+
+## License
+MIT (or chosen license)
+
+## Acknowledgements
+- Judge0 CE
+- Google Generative AI (Gemini)
+- scikit-learn & FastAPI communities
+
+---
+*Replace placeholders before publishing.*  
