@@ -67,51 +67,8 @@ npm run dev
 celery -A app.celery_app.celery worker -l info
 ```
 
-### Environment Variables (Sample)
-```
-SECRET_KEY=CHANGE_ME
-MONGO_URL=mongodb://localhost:27017
-MONGO_DB=dsa_with_ai
-REDIS_URL=redis://localhost:6379/0
-GEMINI_API_KEY=YOUR_GEMINI_KEY
-JUDGE0_URL=https://judge0-ce.p.rapidapi.com
-JUDGE0_KEY=YOUR_RAPIDAPI_KEY
-JUDGE0_HOST_HEADER=judge0-ce.p.rapidapi.com
-```
 
-### API Highlights
-| Endpoint                 | Method | Description |
-|--------------------------|--------|-------------|
-| /auth/signup             | POST   | Register user |
-| /auth/login              | POST   | Obtain JWT |
-| /auth/me                 | GET    | Current user profile |
-| /practice/start          | POST   | Fetch initial problem(s) |
-| /practice/run            | POST   | Execute code via Judge0 |
-| /practice/submit         | POST   | Record attempt + get next recommendation |
-| /stats/profile           | GET    | User stats (streak, success rate) |
-| /chat/ask                | POST   | AI tutor hint/answer |
 
-## Folder Structure (Recommended)
-```
-backend/
-  app/
-    core/ (config, logging)
-    auth/
-    practice/
-    recommender/
-    chatbot/
-    execution/
-    tasks/
-    schemas/
-    db/
-frontend/
-  src/
-    api/
-    pages/
-    components/
-    hooks/
-    styles/
-```
 
 ## Future Enhancements
 - Server-side validation of durations & anti-abuse
@@ -121,27 +78,3 @@ frontend/
 - Rate limiting & refresh tokens
 - Persisted recommender artifacts (avoid rebuild on every start)
 - Test suite expansion + CI integration
-
-## Metrics (Sample – Replace with Real)
-- ~XX questions ingested
-- Recommendation latency: ~XX ms
-- Execution turnaround median: ~X.X s
-- Tutor success (non-error) responses: ~XX%
-- Average confidence uplift after correct fast solves: +YY points
-
-## Testing (Suggested)
-```bash
-pytest -q
-```
-(Placeholder: Add unit tests for recommender, auth, submit flow.)
-
-## License
-MIT (or chosen license)
-
-## Acknowledgements
-- Judge0 CE
-- Google Generative AI (Gemini)
-- scikit-learn & FastAPI communities
-
----
-*Replace placeholders before publishing.*  
