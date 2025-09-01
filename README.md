@@ -28,6 +28,34 @@ A full‑stack platform for coding interview preparation that *adapts* problem d
 | 21–60       | Standard (conditional escalation) |
 | ≤ 20        | Conservative (reinforce or step down) |
 
+
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](images/dashboard.png)  
+
+
+### Search
+![Search by company names or by topic name](images/search.png)  
+
+### Questions Recommendation
+![Questions Recommendation](images/questionAppearance.png)  
+
+### Practice
+![Practice](images/practice.png)  
+
+### Question Suggestion and recommendation
+![Question Suggestion and recommendation](images/questionSolved.png)  
+
+### ChatBot Interaction
+![ChatBot Interaction](images/explanationOfPrblm.png)  
+
+### Profile of user
+![Profile of user](images/profile.png)  
+
+### Email sent when user clicks on couldnt solve
+![Email sent when user clicks on couldnt solve](images/emailCheck.png)  
+
 ### Prerequisites
 - Python 3.11+  
 - MongoDB running locally (or URI)  
