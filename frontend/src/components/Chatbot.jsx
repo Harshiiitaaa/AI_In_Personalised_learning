@@ -63,7 +63,7 @@ export default function Chatbot({ currentQuestion }) {
 
         try {
             // Replaced the service call with a direct fetch to the backend API.
-            const response = await fetch('/chat/ask', {
+            const response = await fetch('http://localhost:8000/chat/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

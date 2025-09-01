@@ -39,11 +39,9 @@ A full‑stack platform for coding interview preparation that *adapts* problem d
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+.venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env   # fill in keys (SECRET_KEY, MONGO_URL, GEMINI_API_KEY, etc.)
-python scripts/import_questions.py leetcode_dataset.csv  # optional ingestion
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend Setup

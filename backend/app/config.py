@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     JUDGE0_HOST_HEADER: str = ""
 
     OPENAI_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
+    GEMINI_API_KEY: str 
 
     ALLOWED_ORIGINS: str = "http://localhost:5173"
 

@@ -6,7 +6,7 @@ from typing import Optional
 
 from .auth import get_current_user_id
 from .db import db
-# from .tasks.tasks import reminder_failed_attempt
+from .tasks.tasks import reminder_failed_attempt
 from .recommender import get_initial_questions, next_question
 from .judge0 import run_code
 from .models import SubmissionCreate 
